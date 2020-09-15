@@ -80,8 +80,6 @@ class ConversationController extends AbstractController {
             throw $th;
         }
 
-        
-        dump($conversation);
         return $this->json([
             'id' => $conversation->getId()
         ], Response::HTTP_CREATED, [], []);
@@ -109,40 +107,24 @@ class ConversationController extends AbstractController {
      * @Route("/index", name="getConversationFront", methods={"GET"})
      */
     public function front(Request $request) {
-        $conversations = $this->conversationRepository->findConversationByUser($this->getUser()->getId());
-
-        // This parameter is automatically created by the MercureBundle
         $hubUrl = $this->getParameter('mercure.default_hub');
-
-        // Link: <http://localhost:3000/.well-known/mercure>; rel="mercure"
         $this->addLink($request, new Link('mercure', $hubUrl));
 
         $token = (new Builder())
-        ->withClaim('mercure', ['subscribe' => "test"])
-        ->getToken(
-            new Sha256(),
-            new Key($this->getParameter('mercure_secret_key'))
-        );
+            // set other appropriate JWT claims, such as an expiration date
+            ->withClaim('mercure', ['subscribe' => ["test"]]) // can also be a URI template, or *
+            ->getToken(new Sha256(), new Key($this->getParameter('mercure_secret_key'))); // don't forget to set this parameter! Test value: !ChangeMe!
+
+        $cookie = Cookie::create('mercureAuthorization')
+            ->withValue($token)
+            ->withPath('/')
+            ->withSecure(true)
+            ->withHttpOnly(true)
+            ->withSameSite('strict')
+        ;
 
         $response = $this->render('conversation/index.html.twig');
-
-        $response->headers->set('Access-Control-Allow-Origin', '*');
-        $response->headers->setCookie(Cookie::create('mercureAuthorization', $token, 0, ''));
-        
-        // $response->headers->setCookie(
-        //     new Cookie(
-        //         'mercureAuthorization',
-        //         $token,
-        //         (new \DateTime())
-        //         ->add(new \DateInterval('PT2H')),
-        //         '/.well-known/mercure',
-        //         null,
-        //         false,
-        //         true,
-        //         false,
-        //         "strict"
-        //     )
-        // );
+        $response->headers->setCookie($cookie);
 
         return $response;
     }
@@ -153,6 +135,7 @@ class ConversationController extends AbstractController {
     public function discover(PublisherInterface $publisher, Request $request) {
         // This parameter is automatically created by the MercureBundle
         $hubUrl = $this->getParameter('mercure.default_hub');
+        $hubUrl = str_replace("localhost", "127.0.0.1", $hubUrl);
 
         // Link: <http://localhost:3000/.well-known/mercure>; rel="mercure"
         $this->addLink($request, new Link('mercure', $hubUrl));
