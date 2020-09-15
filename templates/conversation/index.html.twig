@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello ConversationController!{% endblock %}
+
+{% block body %}
+<style>
+    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
+    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+</style>
+
+<div class="example-wrapper">
+    <h1>Hello XE! ✅</h1>
+
+    This friendly message is coming from: XD
+    <ul>
+        <li>Your controller at <code><a href="{{ 'E:/Code/Symfony/Realtime Chat/RealtimeChat/src/Controller/ConversationController.php'|file_link(0) }}">src/Controller/ConversationController.php</a></code></li>
+        <li>Your template at <code><a href="{{ 'E:/Code/Symfony/Realtime Chat/RealtimeChat/templates/conversation/index.html.twig'|file_link(0) }}">templates/conversation/index.html.twig</a></code></li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        fetch('{{path('conversation.discover')}}').then(response => {
+            const hubUrl = response.headers.get('Link').match(/<([^>]+)>;\s+rel=(?:mercure|"[^"]*mercure[^"]*")/)[1];
+            // URL is a built-in JavaScript class to manipulate URLs
+            const url = new URL(hubUrl);
+            url.searchParams.append('topic', 'test');
+    
+            const eventSource = new EventSource(url, {
+                withCredentials: true
+            });
+            eventSource.onmessage = event => {
+                alert("xd")
+                console.log(JSON.parse(event.data));
+            }
+        });
+    </script>
+{% endblock %}
