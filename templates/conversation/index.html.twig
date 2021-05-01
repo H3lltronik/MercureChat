@@ -31,7 +31,6 @@
                 withCredentials: true
             });
             eventSource.onmessage = event => {
-                alert("xd")
                 console.log(JSON.parse(event.data));
             }
         });

@@ -88,18 +88,12 @@ class ConversationController extends AbstractController {
     /**
      * @Route("/", name="getConversation", methods={"GET"})
      */
-    public function getConvs(PublisherInterface $publisher) {
+    public function getConvs(Request $request) {
         $conversations = $this->conversationRepository->findConversationByUser($this->getUser()->getId());
+        
+        $hubUrl = $this->getParameter('mercure.default_hub');
 
-        $update = new Update(
-            'test',
-            json_encode(['status' => 'EVELYN!']),
-            true,
-        );
-
-        // The Publisher service is an invokable object
-        $publisher($update);
-
+        $this->addLink($request, new Link('mercure', $hubUrl));
         return $this->json($conversations);
     }
 
@@ -107,26 +101,25 @@ class ConversationController extends AbstractController {
      * @Route("/index", name="getConversationFront", methods={"GET"})
      */
     public function front(Request $request) {
-        $hubUrl = $this->getParameter('mercure.default_hub');
-        $this->addLink($request, new Link('mercure', $hubUrl));
+        // $hubUrl = $this->getParameter('mercure.default_hub');
+        // $this->addLink($request, new Link('mercure', $hubUrl));
 
-        $token = (new Builder())
-            // set other appropriate JWT claims, such as an expiration date
-            ->withClaim('mercure', ['subscribe' => ["test"]]) // can also be a URI template, or *
-            ->getToken(new Sha256(), new Key($this->getParameter('mercure_secret_key'))); // don't forget to set this parameter! Test value: !ChangeMe!
+        // $token = (new Builder())
+        //     ->withClaim('mercure', ['subscribe' => [sprintf("/%s", $username)]])
+        //     ->getToken(new Sha256(), new Key($this->getParameter('mercure_secret_key')));
 
-        $cookie = Cookie::create('mercureAuthorization')
-            ->withValue($token)
-            ->withPath('/')
-            ->withSecure(true)
-            ->withHttpOnly(true)
-            ->withSameSite('strict')
-        ;
+        // $cookie = Cookie::create('mercureAuthorization')
+        //     ->withValue($token)
+        //     ->withPath('/.well-known/mercure')
+        //     ->withSecure(true)
+        //     ->withHttpOnly(true)
+        //     ->withSameSite('strict')
+        // ;
 
-        $response = $this->render('conversation/index.html.twig');
-        $response->headers->setCookie($cookie);
+        // $response = $this->render('conversation/index.html.twig');
+        // $response->headers->setCookie($cookie);
 
-        return $response;
+        // return $response;
     }
 
     /**
@@ -135,14 +128,11 @@ class ConversationController extends AbstractController {
     public function discover(PublisherInterface $publisher, Request $request) {
         // This parameter is automatically created by the MercureBundle
         $hubUrl = $this->getParameter('mercure.default_hub');
-        $hubUrl = str_replace("localhost", "127.0.0.1", $hubUrl);
+        // $hubUrl = str_replace("localhost", "127.0.0.1", $hubUrl);
 
         // Link: <http://localhost:3000/.well-known/mercure>; rel="mercure"
         $this->addLink($request, new Link('mercure', $hubUrl));
 
-        return $this->json([
-            '@id' => '/books/1',
-            'availability' => 'https://schema.org/InStock',
-        ]);
+        return $this->json(["testData" => "Monke"]);
     }
 }

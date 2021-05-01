@@ -77,34 +77,36 @@ class ConversationRepository extends ServiceEntityRepository
 
     public function findConversationByUser(int $userId) {
         $qb = $this->createQueryBuilder('c');
-        $qb
-        ->select('otherUser.username', 'c.id as conversationId', 'lm.content', 'lm.createdAt')
-        ->innerJoin('c.participants', 'p', Join::WITH, $qb->expr()->neq('p.user', ':user'))
-        ->innerJoin('c.participants', 'me', Join::WITH, $qb->expr()->eq('me.user', ':user'))
-        ->leftJoin('c.lastMessage', 'lm')
-        ->innerJoin('me.user', 'meUser')
-        ->innerJoin('p.user', 'otherUser')
-        ->where('meUser.id = :user')
-        ->setParameter('user', $userId)
-        ->orderBy('lm.createdAt', 'DESC');
-
+        $qb->
+            select('otherUser.username', 'c.id as conversationId', 'lm.content', 'lm.createdAt')
+            ->innerJoin('c.participants', 'p', Join::WITH, $qb->expr()->neq('p.user', ':user'))
+            ->innerJoin('c.participants', 'me', Join::WITH, $qb->expr()->eq('me.user', ':user'))
+            ->leftJoin('c.lastMessage', 'lm')
+            ->innerJoin('me.user', 'meUser')
+            ->innerJoin('p.user', 'otherUser')
+            ->where('meUser.id = :user')
+            ->setParameter('user', $userId)
+            ->orderBy('lm.createdAt', 'DESC')
+        ;
+        
         return $qb->getQuery()->getResult();
     }
 
-    public function checkIfUserisParticipant(int $conversationId, int $userId) {
+    public function checkIfUserisParticipant(int $conversationId, int $userId)
+    {
         $qb = $this->createQueryBuilder('c');
         $qb
-        ->innerJoin("c.participants", "p")
-        ->where("c.id = :conversationId")
-        ->andWhere(
-            $qb->expr()->eq("p.user", ":userId")
-        )
-        ->setParameters([
-            "conversationId" => $conversationId,
-            "userId" => $userId
-        ])
+            ->innerJoin('c.participants', 'p')
+            ->where('c.id = :conversationId')
+            ->andWhere(
+                $qb->expr()->eq('p.user', ':userId')
+            )
+            ->setParameters([
+                'conversationId' => $conversationId,
+                'userId' => $userId
+            ])
         ;
 
-        return $qb->getQuery()->getResult();
+        return $qb->getQuery()->getOneOrNullResult();
     }
 }
